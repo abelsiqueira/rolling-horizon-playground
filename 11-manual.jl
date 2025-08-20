@@ -5,7 +5,6 @@ using MetaGraphsNext
 using TulipaClustering
 using TulipaEnergyModel
 using TulipaIO
-using TulipaBuilder
 
 function _validate_one_rep_period(connection)
     for row in DuckDB.query(
@@ -21,71 +20,11 @@ function _validate_one_rep_period(connection)
     end
 end
 
-# We are using TulipaBuilder as main development tool because we need RP = 1
-
-tulipa = TulipaData{String}()
-
-add_asset!(
-    tulipa,
-    "Solar",
-    :producer;
-    capacity = 10.0,
-    fixed_cost = 0.01,
-    investment_cost = 0.01,
-    initial_units = 100000.0,
-)
-add_asset!(
-    tulipa,
-    "Wind Offshore",
-    :producer;
-    capacity = 100.0,
-    investable = false,
-    investment_cost = 1.0,
-    initial_units = 80.0,
-    investment_method = "simple",
-)
-add_asset!(
-    tulipa,
-    "Battery",
-    :storage;
-    capacity = 10.0,
-    capacity_storage_energy = 1000.0,
-    initial_units = 10.0,
-    initial_storage_units = 1.0,
-    initial_storage_level = 10.0,
-    efficiency = 0.999,
-)
-add_asset!(tulipa, "Hub", :hub)
-add_asset!(tulipa, "Demand", :consumer; peak_demand = 37.5, consumer_balance_sense = "==")
-
-### flow
-# add_flow!(tulipa, "Solar", "Hub")
-add_flow!(tulipa, "Wind Offshore", "Hub")
-add_flow!(tulipa, "Battery", "Hub")
-add_flow!(tulipa, "Hub", "Battery")
-add_flow!(tulipa, "Hub", "Demand")
-
-### profiles
-df = DataFrame(CSV.File("profiles.csv"))
-horizon_length = size(df, 1)
-
-attach_profile!(tulipa, "Solar", :availability, 2030, df[!, "NL_Solar"])
-attach_profile!(tulipa, "Wind Offshore", :availability, 2030, df[!, "NL_Wind_Offshore"])
-# tulipa.graph["Wind Offshore"].profiles[(:availability, 2030)][16:100:end] .*= 0.0 # DEBUG
-attach_profile!(tulipa, "Demand", :demand, 2030, df[!, "NL_E_Demand"])
-# tulipa.graph["Demand"].profiles[(:demand, 2030)][16] = 1.0 # DEBUG
-
-connection = create_connection(tulipa)
-
-### clustering
-dummy_cluster!(connection)
-
-### populate_with_defaults
-populate_with_defaults!(connection)
+connection = DBInterface.connect(DuckDB.DB)
+schemas = TulipaEnergyModel.schema_per_table_name
+TulipaIO.read_csv_folder(connection, joinpath(@__DIR__, "TheySeeMeRolling"); schemas)
 
 _q(s) = DataFrame(DuckDB.query(connection, s))
-
-TulipaBuilder.create_case_study_csv_folder(connection, "TheySeeMeRolling")
 
 # Manually run rolling horizon simulation 
 try
