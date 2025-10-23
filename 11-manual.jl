@@ -67,6 +67,7 @@ try
         _q("CREATE OR REPLACE TABLE full_$table_name AS SELECT * FROM $table_name")
     end
 
+    horizon_length = maximum(_q("FROM profiles_rep_periods").timestep)
     move_forward = 24 * 28 * 3
     maximum_window_length = move_forward * 2
 
