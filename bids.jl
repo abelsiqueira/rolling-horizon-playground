@@ -31,8 +31,8 @@ add_asset!(
     tulipa,
     "demand-bid-001",
     :consumer;
-    peak_demand = 100.0,
-    consumer_balance_sense = "==",
+    peak_demand = 150.0,
+    consumer_balance_sense = "<=",
     unit_commitment = true,
     unit_commitment_integer = true,
     unit_commitment_method = "basic",
@@ -42,7 +42,7 @@ add_asset!(
     "demand-bid-002",
     :consumer;
     peak_demand = 100.0,
-    consumer_balance_sense = "==",
+    consumer_balance_sense = "<=",
     unit_commitment = true,
     unit_commitment_integer = true,
     unit_commitment_method = "basic",
@@ -54,7 +54,7 @@ add_flow!(tulipa, "thermal", "demand"; operational_cost = 50.0)
 add_flow!(tulipa, "battery", "demand")
 add_flow!(tulipa, "demand", "battery")
 
-add_flow!(tulipa, "demand", "demand-bid-001"; operational_cost = -10.0)
+add_flow!(tulipa, "demand", "demand-bid-001"; operational_cost = -50.1)
 add_flow!(tulipa, "demand", "demand-bid-002"; operational_cost = -20.0) # This is preferred because of the higher price
 
 ### profiles
